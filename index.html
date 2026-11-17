@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Progres Pendaftar SMA Taruna Negeri Jatim</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root { --bg-page: #f1f5f9; --text-main: #0f172a; --text-muted: #64748b; }
+    * { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; margin: 0; padding: 20px; background: var(--bg-page); color: var(--text-main); }
+    .container { max-width: 1220px; margin: auto; }
+
+    /* Header */
+    .header-box { background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #0284c7 100%); color: #ffffff; padding: 22px 26px; border-radius: 14px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; box-shadow: 0 10px 25px -5px rgba(30, 58, 138, 0.25); }
+    .header-box h2 { margin: 0; font-size: 20px; letter-spacing: -0.3px; }
+    .header-box p { margin: 5px 0 0; font-size: 13px; color: #bae6fd; }
+    .header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn { border: none; padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13px; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-light { background: #ffffff; color: #1e3a8a; }
+    .btn-light:hover { background: #e0f2fe; transform: translateY(-1px); }
+    .btn-glass { background: rgba(255,255,255,0.16); color: #ffffff; border: 1px solid rgba(255,255,255,0.3); }
+    .btn-glass:hover { background: rgba(255,255,255,0.28); }
+
+    /* Insight Bar */
+    .insight-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 18px; }
+    .insight-item { background: #ffffff; padding: 14px 18px; border-radius: 12px; box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04); display: flex; align-items: center; gap: 14px; }
+    .insight-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .insight-item span { display: block; color: var(--text-muted); font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.4px; }
+    .insight-item strong { font-size: 15px; color: var(--text-main); }
+
+    /* Kartu Utama + Kartu Sekolah */
+    .cards-section { display: grid; grid-template-columns: 270px 1fr; gap: 16px; margin-bottom: 20px; align-items: stretch; }
+    .hero-card { background: linear-gradient(145deg, #0284c7, #1d4ed8); color: #ffffff; padding: 22px; border-radius: 14px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 8px 20px -4px rgba(2, 132, 199, 0.35); }
+    .hero-card .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; opacity: 0.9; font-weight: 700; }
+    .hero-card .value { font-size: 42px; font-weight: 800; margin: 12px 0; line-height: 1; }
+    .hero-card .delta { background: rgba(255,255,255,0.2); padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; width: fit-content; }
+
+    .school-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
+    .stat-card { background: #ffffff; padding: 18px 20px; border-radius: 14px; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05); border-top: 5px solid #cbd5e1; display: flex; flex-direction: column; justify-content: center; transition: transform 0.2s ease; }
+    .stat-card:hover { transform: translateY(-2px); }
+    .stat-card .label { font-size: 14px; color: #334155; font-weight: 700; }
+    .stat-card .value { font-size: 30px; font-weight: 800; color: #0f172a; margin: 8px 0 6px; line-height: 1; }
+    .stat-card .delta { font-size: 12px; font-weight: 600; color: #16a34a; }
+    .stat-card .delta.neutral { color: #94a3b8; font-weight: 500; }
+
+    /* Grafik */
+    .charts-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; margin-bottom: 20px; }
+    .card { background: #ffffff; padding: 20px 22px; border-radius: 14px; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05); }
+    .card-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+    .card-header h3 { margin: 0; font-size: 15px; color: #0f172a; }
+    .toggle-group { display: inline-flex; background: #f1f5f9; padding: 3px; border-radius: 8px; }
+    .toggle-btn { border: none; background: transparent; padding: 5px 11px; font-size: 12px; font-weight: 600; color: #64748b; border-radius: 6px; cursor: pointer; }
+    .toggle-btn.active { background: #ffffff; color: #1e3a8a; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .chart-box { position: relative; height: 290px; width: 100%; }
+
+    /* Tabel */
+    .table-wrapper { max-height: 420px; overflow: auto; border: 1px solid #e2e8f0; border-radius: 10px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 11px 14px; border-bottom: 1px solid #e2e8f0; text-align: right; white-space: nowrap; }
+    th:first-child, td:first-child { text-align: center; font-weight: 600; }
+    th { background: #1e293b; color: #ffffff; position: sticky; top: 0; z-index: 2; font-weight: 600; }
+    tbody tr:hover { background: #f0f9ff; }
+    tfoot tr { background: #e0f2fe !important; font-weight: 700; position: sticky; bottom: 0; color: #0c4a6e; }
+    .badge-plus { background: #dcfce7; color: #15803d; padding: 3px 8px; border-radius: 12px; font-weight: 700; font-size: 12px; }
+    .badge-zero { color: #94a3b8; }
+
+    .toast { position: fixed; bottom: 20px; right: 20px; background: #0f172a; color: #fff; padding: 12px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; opacity: 0; transform: translateY(10px); transition: all 0.3s; pointer-events: none; z-index: 99; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 960px) {
+      .insight-bar { grid-template-columns: 1fr; }
+      .cards-section { grid-template-columns: 1fr; }
+      .charts-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header-box">
+    <div>
+      <h2>Dashboard Progres Pendaftar SMA Taruna Negeri Jatim</h2>
+      <p id="statusText">Menghubungkan ke database Google Sheets...</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-glass" onclick="copyRingkasanWA()">Salin Laporan WA</button>
+      <button class="btn btn-light" onclick="loadData()">Muat Ulang Data</button>
+    </div>
+  </div>
+
+  <div id="mainContent" style="display:none;">
+    <div class="insight-bar" id="insightBar"></div>
+
+    <div class="cards-section">
+      <div class="hero-card" id="heroCard"></div>
+      <div class="school-grid" id="schoolGrid"></div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="card">
+        <div class="card-header">
+          <h3>Kurva Pertumbuhan Pendaftar</h3>
+          <div class="toggle-group">
+            <button class="toggle-btn active" id="btnTrendTotal" onclick="setTrendMode('total')">Total Gabungan</button>
+            <button class="toggle-btn" id="btnTrendSchool" onclick="setTrendMode('school')">Per Sekolah</button>
+          </div>
+        </div>
+        <div class="chart-box">
+          <canvas id="dailyTrendChart"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>Proporsi Pendaftar Aktif</h3>
+          <div class="toggle-group">
+            <button class="toggle-btn active" id="btnBar" onclick="setSchoolChartType('bar')">Batang</button>
+            <button class="toggle-btn" id="btnDoughnut" onclick="setSchoolChartType('doughnut')">Donat</button>
+          </div>
+        </div>
+        <div class="chart-box">
+          <canvas id="totalSchoolChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3>Riwayat Progres Harian (Tanggal Terisi)</h3>
+        <label style="font-size: 12px; color: #475569; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+          <input type="checkbox" id="hideZeroCols" checked onchange="renderTable()"> Sembunyikan sekolah yang masih 0
+        </label>
+      </div>
+      <div class="table-wrapper">
+        <table id="rekapTable">
+          <thead></thead>
+          <tbody></tbody>
+          <tfoot></tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast">Laporan berhasil disalin ke clipboard!</div>
+
+<script>
+  // TEMPELKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI:
+  const API_URL = "https://script.google.com/macros/s/AKfycbx-UW2TN4Duote8jreZ2OrG1QGaWEpfQRafNC9hBCLO5aSb4uU0YJaJ0NG76iPZG2lYHg/exec";
+
+  let globalData = null;
+  let trendMode = 'total';
+  let schoolChartType = 'bar';
+  let trendChartInstance = null;
+  let schoolChartInstance = null;
+
+  const SEKOLAH_META = [
+    { nama: "SMAN Taruna Nala", pendek: "Taruna Nala", warna: "#1e3a8a", bg: "rgba(30, 58, 138, 0.14)" },
+    { nama: "SMAN 3 Taruna Angkasa", pendek: "Taruna Angkasa", warna: "#0284c7", bg: "rgba(2, 132, 199, 0.14)" },
+    { nama: "SMAN 5 Taruna Brawijaya", pendek: "Taruna Brawijaya", warna: "#15803d", bg: "rgba(21, 128, 61, 0.14)" },
+    { nama: "SMAN 2 Taruna Bhayangkara", pendek: "Taruna Bhayangkara", warna: "#be123c", bg: "rgba(190, 18, 60, 0.14)" },
+    { nama: "SMAN 2 Taruna Pamong Praja", pendek: "Pamong Praja", warna: "#d97706", bg: "rgba(217, 119, 6, 0.14)" },
+    { nama: "SMAN 1 Taruna Madani", pendek: "Taruna Madani", warna: "#0d9488", bg: "rgba(13, 148, 136, 0.14)" }
+  ];
+
+  // Pembersih format tanggal agar selalu pendek (misal: "17 Nov 2026")
+  function cleanDateLabel(str) {
+    if (!str) return "-";
+    const s = String(str).trim();
+    if (s.includes("GMT")) {
+      const d = new Date(s);
+      if (!isNaN(d)) {
+        return d.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+      }
+    }
+    return s;
+  }
+
+  async function loadData() {
+    document.getElementById("statusText").textContent = "Menyinkronkan data terbaru dari Google Sheets...";
+    try {
+      const response = await fetch(API_URL);
+      if (!response.ok) throw new Error("Gagal mengambil data dari server");
+      globalData = await response.json();
+
+      // Bersihkan semua string tanggal dari server
+      globalData.latestTanggal = cleanDateLabel(globalData.latestTanggal);
+      if (globalData.statistik && globalData.statistik.puncakHari) {
+        globalData.statistik.puncakHari.tanggal = cleanDateLabel(globalData.statistik.puncakHari.tanggal);
+      }
+      if (globalData.dataHarian) {
+        globalData.dataHarian.forEach(d => d.tanggal = cleanDateLabel(d.tanggal));
+      }
+
+      renderAll();
+    } catch (err) {
+      document.getElementById("statusText").textContent = "Gagal memuat data: " + err.message;
+    }
+  }
+
+  function renderAll() {
+    if (!globalData) return;
+    const validData = (globalData.dataHarian || []).filter(d => d.totalPosisi > 0);
+    if (validData.length === 0) {
+      document.getElementById("statusText").textContent = "Belum ada data > 0 di spreadsheet.";
+      return;
+    }
+
+    document.getElementById("mainContent").style.display = "block";
+    const { latestSekolah, latestPenambahanSekolah, latestTotal, latestPenambahan, latestTanggal, statistik } = globalData;
+    document.getElementById("statusText").textContent = `Data terupdate per ${latestTanggal} • ${statistik.jumlahHariTerisi} hari berjalan`;
+
+    document.getElementById("insightBar").innerHTML = `
+      <div class="insight-item">
+        <div class="insight-icon" style="background:#e0f2fe; color:#0284c7;">📅</div>
+        <div><span>Hari Berjalan</span><strong>${statistik.jumlahHariTerisi} Hari Terisi</strong></div>
+      </div>
+      <div class="insight-item">
+        <div class="insight-icon" style="background:#dcfce7; color:#15803d;">📈</div>
+        <div><span>Rata-Rata Posisi / Hari</span><strong>${statistik.rataRataHarian.toLocaleString("id-ID")} siswa/hari</strong></div>
+      </div>
+      <div class="insight-item">
+        <div class="insight-icon" style="background:#fef3c7; color:#d97706;">🔥</div>
+        <div><span>Lonjakan Tertinggi</span><strong>+${statistik.puncakHari.jumlah.toLocaleString("id-ID")} (${statistik.puncakHari.tanggal})</strong></div>
+      </div>
+    `;
+
+    document.getElementById("heroCard").innerHTML = `
+      <div class="label">TOTAL TERUPDATE (${latestTanggal})</div>
+      <div class="value">${latestTotal.toLocaleString("id-ID")}</div>
+      <div class="delta">${latestPenambahan > 0 ? '+' + latestPenambahan.toLocaleString("id-ID") + ' pendaftar hari ini' : 'Belum ada penambahan baru'}</div>
+    `;
+
+    // Hanya tampilkan kartu sekolah yang sudah memiliki angka > 0
+    const schoolGrid = document.getElementById("schoolGrid");
+    schoolGrid.innerHTML = "";
+    SEKOLAH_META.forEach((m, idx) => {
+      const val = latestSekolah[idx] || 0;
+      if (val <= 0) return;
+      const delta = latestPenambahanSekolah[idx] || 0;
+      const deltaText = delta > 0 ? `+${delta.toLocaleString("id-ID")} hari ini` : "Belum update hari ini";
+      schoolGrid.innerHTML += `
+        <div class="stat-card" style="border-top-color: ${m.warna};">
+          <div class="label" title="${m.nama}">${m.pendek}</div>
+          <div class="value">${val.toLocaleString("id-ID")}</div>
+          <div class="delta ${delta <= 0 ? 'neutral' : ''}">${deltaText}</div>
+        </div>
+      `;
+    });
+
+    renderTrendChart();
+    renderSchoolChart();
+    renderTable();
+  }
+
+  function setTrendMode(mode) {
+    trendMode = mode;
+    document.getElementById("btnTrendTotal").classList.toggle("active", mode === "total");
+    document.getElementById("btnTrendSchool").classList.toggle("active", mode === "school");
+    renderTrendChart();
+  }
+
+  function setSchoolChartType(type) {
+    schoolChartType = type;
+    document.getElementById("btnBar").classList.toggle("active", type === "bar");
+    document.getElementById("btnDoughnut").classList.toggle("active", type === "doughnut");
+    renderSchoolChart();
+  }
+
+  function renderTrendChart() {
+    const validData = (globalData.dataHarian || []).filter(d => d.totalPosisi > 0);
+    const labels = validData.map(d => d.tanggal);
+    let datasets = [];
+
+    if (trendMode === "total") {
+      datasets = [{
+        label: "Total Pendaftar Terkini",
+        data: validData.map(d => d.totalPosisi),
+        borderColor: "#1d4ed8",
+        backgroundColor: "rgba(29, 78, 216, 0.14)",
+        borderWidth: 3,
+        fill: true,
+        tension: 0.35,
+        pointRadius: 6,
+        pointBackgroundColor: "#ffffff",
+        pointBorderColor: "#1d4ed8",
+        pointBorderWidth: 3
+      }];
+    } else {
+      SEKOLAH_META.forEach((m, idx) => {
+        if ((globalData.latestSekolah[idx] || 0) > 0) {
+          datasets.push({
+            label: m.pendek,
+            data: validData.map(d => d.sekolah[idx]),
+            borderColor: m.warna,
+            backgroundColor: m.bg,
+            borderWidth: 2.5,
+            fill: false,
+            tension: 0.35,
+            pointRadius: 5
+          });
+        }
+      });
+    }
+
+    if (trendChartInstance) trendChartInstance.destroy();
+    trendChartInstance = new Chart(document.getElementById("dailyTrendChart"), {
+      type: "line",
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: { padding: { top: 12, right: 16, left: 6, bottom: 4 } },
+        interaction: { mode: "index", intersect: false },
+        plugins: { legend: { display: trendMode === "school", position: "bottom" } },
+        scales: {
+          y: { beginAtZero: false, grace: "15%", grid: { color: "#f1f5f9" } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  function renderSchoolChart() {
+    const activeLabels = [];
+    const activeValues = [];
+    const activeColors = [];
+
+    SEKOLAH_META.forEach((m, idx) => {
+      const val = globalData.latestSekolah[idx] || 0;
+      if (val > 0) {
+        activeLabels.push(m.pendek);
+        activeValues.push(val);
+        activeColors.push(m.warna);
+      }
+    });
+
+    if (schoolChartInstance) schoolChartInstance.destroy();
+    schoolChartInstance = new Chart(document.getElementById("totalSchoolChart"), {
+      type: schoolChartType,
+      data: {
+        labels: activeLabels,
+        datasets: [{
+          label: "Posisi Pendaftar",
+          data: activeValues,
+          backgroundColor: activeColors,
+          borderRadius: schoolChartType === "bar" ? 8 : 0,
+          barThickness: schoolChartType === "bar" ? 52 : undefined
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: schoolChartType === "doughnut", position: "bottom" } },
+        scales: schoolChartType === "bar" ? {
+          y: { beginAtZero: true, grace: "10%", grid: { color: "#f1f5f9" } },
+          x: { grid: { display: false } }
+        } : {}
+      }
+    });
+  }
+
+  function renderTable() {
+    const validData = (globalData.dataHarian || []).filter(d => d.totalPosisi > 0);
+    const hideZero = document.getElementById("hideZeroCols").checked;
+
+    const visibleIndices = [];
+    SEKOLAH_META.forEach((_, idx) => {
+      if (!hideZero || (globalData.latestSekolah[idx] || 0) > 0) {
+        visibleIndices.push(idx);
+      }
+    });
+
+    const thead = document.querySelector("#rekapTable thead");
+    const tbody = document.querySelector("#rekapTable tbody");
+    const tfoot = document.querySelector("#rekapTable tfoot");
+
+    thead.innerHTML = `
+      <tr>
+        <th>Tanggal</th>
+        ${visibleIndices.map(i => `<th>${SEKOLAH_META[i].pendek}</th>`).join("")}
+        <th>Total Posisi</th>
+        <th>Penambahan</th>
+      </tr>
+    `;
+
+    tbody.innerHTML = validData.map(item => `
+      <tr>
+        <td>${item.tanggal}</td>
+        ${visibleIndices.map(i => `<td>${item.sekolah[i].toLocaleString("id-ID")}</td>`).join("")}
+        <td><strong>${item.totalPosisi.toLocaleString("id-ID")}</strong></td>
+        <td><span class="${item.penambahanHarian > 0 ? 'badge-plus' : 'badge-zero'}">${item.penambahanHarian > 0 ? '+' : ''}${item.penambahanHarian.toLocaleString("id-ID")}</span></td>
+      </tr>
+    `).join("");
+
+    tfoot.innerHTML = `
+      <tr>
+        <td>TERUPDATE (${globalData.latestTanggal})</td>
+        ${visibleIndices.map(i => `<td>${globalData.latestSekolah[i].toLocaleString("id-ID")}</td>`).join("")}
+        <td>${globalData.latestTotal.toLocaleString("id-ID")}</td>
+        <td>+${globalData.latestPenambahan.toLocaleString("id-ID")}</td>
+      </tr>
+    `;
+  }
+
+  function copyRingkasanWA() {
+    if (!globalData) return;
+    let teks = `*UPDATE PENDAFTAR SMA TARUNA NEGERI JATIM*\nPer Tanggal: *${globalData.latestTanggal}*\n\n`;
+    SEKOLAH_META.forEach((m, idx) => {
+      const val = globalData.latestSekolah[idx] || 0;
+      const delta = globalData.latestPenambahanSekolah[idx] || 0;
+      if (val > 0) {
+        teks += `• ${m.nama}: *${val.toLocaleString("id-ID")}* (${delta > 0 ? '+' + delta : 'tetap'})\n`;
+      }
+    });
+    teks += `\n*TOTAL TERUPDATE: ${globalData.latestTotal.toLocaleString("id-ID")} pendaftar* (+${globalData.latestPenambahan.toLocaleString("id-ID")} hari ini)`;
+
+    navigator.clipboard.writeText(teks).then(() => {
+      const toast = document.getElementById("toast");
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 2500);
+    });
+  }
+
+  window.onload = loadData;
+</script>
+
+</body>
+</html>
